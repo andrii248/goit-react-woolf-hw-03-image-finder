@@ -30,7 +30,15 @@ class App extends Component {
       this.setState({ loading: true });
       FetchData(searchName, countPage, per_page)
         .then(data => {
-          this.setState({ showLoadMore: true, loading: true });
+          if (data.hits.length === 0) {
+            Notiflix.Notify.error(
+              'Your query was not successfully completed. Please, try again!'
+            );
+            return;
+          }
+
+          const hasMorePhotos =
+            countPage < Math.ceil(data.totalHits / per_page);
 
           const filterDataHits = data.hits.map(img => {
             return Object.fromEntries(
@@ -43,6 +51,7 @@ class App extends Component {
           this.setState(prev => ({
             imageList: [...prev.imageList, ...filterDataHits],
             totalHits: data.totalHits,
+            showLoadMore: hasMorePhotos,
           }));
 
           if (countPage === 1) {
@@ -51,35 +60,31 @@ class App extends Component {
             );
           }
 
-          if (countPage > Math.ceil(data.totalHits / per_page)) {
-            this.setState({ showLoadMore: false });
+          if (!hasMorePhotos) {
             Notiflix.Notify.info(
               "Whoops! You've just reached the end of the image list."
             );
           }
         })
-        .catch(this.onApiError)
+        .catch(error => console.log(error))
         .finally(() => this.setState({ loading: false }));
     }
   }
 
-  onApiError = () => {
-    Notiflix.Notify.failure(
-      'Oops! No images found for your request. Please try again.'
-    );
-    this.setState({ showLoadMore: false });
-  };
-
   onSubmit = name => {
-    this.setState(prev =>
-      prev.searchName === name && prev.countPage === 1
-        ? { countPage: 1 }
-        : {
-            searchName: name,
-            countPage: 1,
-            imageList: [],
-          }
-    );
+    if (this.state.searchName === name) {
+      Notiflix.Notify.info(
+        `Your query on ${name.toUpperCase()} already completed and currently shown`
+      );
+
+      return;
+    } else {
+      this.setState({
+        searchName: name,
+        countPage: 1,
+        imageList: [],
+      });
+    }
   };
 
   openModal = (url, alt) => {
