@@ -8,9 +8,6 @@ async function FetchData(name, page, per_page) {
     `${API_URL}?q=${name}&page=${page}&key=${MY_KEY}&image_type=photo&orientation=horizontal&per_page=${per_page}`
   );
 
-  if (!response.data.total) {
-    return Promise.reject(new Error(`No image with name ${name}`));
-  }
   return response.data;
 }
 

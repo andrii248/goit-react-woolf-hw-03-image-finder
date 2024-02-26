@@ -21,15 +21,17 @@ class App extends Component {
   };
 
   componentDidUpdate(_, prevState) {
-    const { searchName, per_page, countPage, imageList } = this.state;
+    const { searchName, per_page, countPage } = this.state;
 
     if (
       prevState.countPage !== countPage ||
       prevState.searchName !== searchName
     ) {
-      this.setState({ showLoadMore: false, loading: true });
+      this.setState({ loading: true });
       FetchData(searchName, countPage, per_page)
         .then(data => {
+          this.setState({ showLoadMore: true, loading: true });
+
           const filterDataHits = data.hits.map(img => {
             return Object.fromEntries(
               Object.entries(img).filter(([key]) =>
@@ -41,12 +43,7 @@ class App extends Component {
           this.setState(prev => ({
             imageList: [...prev.imageList, ...filterDataHits],
             totalHits: data.totalHits,
-            loading: false,
           }));
-
-          if (data.total !== data.hits.length) {
-            this.setState({ showLoadMore: true });
-          }
 
           if (countPage === 1) {
             Notiflix.Notify.success(
@@ -54,14 +51,15 @@ class App extends Component {
             );
           }
 
-          if (data.total <= imageList.length + per_page) {
-            this.setState({ showMOdal: false });
+          if (countPage > Math.ceil(data.totalHits / per_page)) {
+            this.setState({ showLoadMore: false });
             Notiflix.Notify.info(
               "Whoops! You've just reached the end of the image list."
             );
           }
         })
-        .catch(this.onApiError);
+        .catch(this.onApiError)
+        .finally(() => this.setState({ loading: false }));
     }
   }
 
@@ -69,14 +67,18 @@ class App extends Component {
     Notiflix.Notify.failure(
       'Oops! No images found for your request. Please try again.'
     );
-    this.setState({ showLoadMore: false, loading: false });
+    this.setState({ showLoadMore: false });
   };
 
   onSubmit = name => {
     this.setState(prev =>
       prev.searchName === name && prev.countPage === 1
         ? { countPage: 1 }
-        : { searchName: name, countPage: 1, imageList: [] }
+        : {
+            searchName: name,
+            countPage: 1,
+            imageList: [],
+          }
     );
   };
 

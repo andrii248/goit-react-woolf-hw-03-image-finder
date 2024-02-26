@@ -8,31 +8,31 @@ class Modal extends Component {
   componentDidMount() {
     window.addEventListener('keydown', this.handelKeyUp);
   }
+
   componentWillUnmount() {
     window.removeEventListener('keydown', this.handelKeyUp);
   }
+
   handelKeyUp = e => {
     if (e.code === 'Escape') {
       this.addCloseClass();
-      setTimeout(() => {
-        this.props.onClose();
-      }, 1000);
+      this.props.onClose();
     }
   };
   handleBackdropClick = e => {
     if (e.target === e.currentTarget) {
       this.addCloseClass();
-      setTimeout(() => {
-        this.props.onClose();
-      }, 1000);
+      this.props.onClose();
     }
   };
+
   addCloseClass = () => {
     const Overlay = document.querySelector('#CloseAnimateOverlay');
     const Modal = document.querySelector('#CloseAnimateModal');
     Overlay.classList.add(`${s.CloseAnimate}`);
     Modal.classList.add(`${s.CloseAnimate}`);
   };
+
   render() {
     const { url, alt } = this.props;
     return createPortal(
